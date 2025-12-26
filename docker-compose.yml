@@ -12,10 +12,13 @@ services:
       - mysql_data:/var/lib/mysql
       - ./migrations/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret" ]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
       interval: 5s
       timeout: 3s
       retries: 10
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
   api:
     build:
@@ -35,6 +38,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
 
 volumes:
   mysql_data:
