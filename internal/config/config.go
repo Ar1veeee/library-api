@@ -31,7 +31,7 @@ func Load() *Config {
 
 func NewDatabase(cfg *Config) (*sql.DB, error) {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true",
-		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort,
+		cfg.DBUser, cfg.DBPassword, cfg.DBHost, cfg.DBPort, cfg.DBName,
 	)
 
 	db, err := sql.Open("mysql", dsn)

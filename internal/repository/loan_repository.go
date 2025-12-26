@@ -65,7 +65,7 @@ func (r *LoanRepository) GetActiveLoanByMemberAndBook(ctx context.Context, tx *s
 	query := `
 		SELECT id, member_id, book_id, borrowed_at, returned_at
 		FROM loans
-		WHERE member_id = ? AND book_id = ? AND returned_at IS NULL
+		WHERE member_id = ? AND book_id = ?
 		FOR UPDATE
 	`
 
@@ -100,6 +100,7 @@ func (r *LoanRepository) GetByMemberID(ctx context.Context, memberID int) ([]mod
 	if err != nil {
 		return nil, err
 	}
+
 	defer rows.Close()
 
 	var loans []model.Loan

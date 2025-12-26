@@ -32,9 +32,18 @@ func NewLoanService(
 }
 
 func (s *LoanService) BorrowBook(ctx context.Context, memberID, bookID int) error {
+	// MENGAPA menggunakan sql.LevelReadCommitted?
+	// - READ UNCOMMITTED: Terlalu loose, bisa dirty read
+	// - READ COMMITTED: Balance yang baik, cegah dirty read tapi allow non-repeatable read
+	// - REPEATABLE READ: Lebih strict, tapi bisa phantom read & deadlock lebih sering
+	// - SERIALIZABLE: Terlalu strict, performance buruk untuk high concurrency
+	// Untuk use case library yang tidak butuh strict serialization, READ COMMITTED cukup
 	tx, err := s.db.BeginTx(ctx, &sql.TxOptions{Isolation: sql.LevelReadCommitted})
 	if err != nil {
-		return model.NewAPIError("Gagal memulai transaksi database", model.ErrCodeTxFailed)
+		return model.NewAPIError(
+			"Gagal memulai transaksi database",
+			model.ErrCodeTxFailed,
+		)
 	}
 
 	defer tx.Rollback()
@@ -147,6 +156,7 @@ func (s *LoanService) ReturnBook(ctx context.Context, memberID, bookID int) erro
 			model.ErrCodeTxFailed,
 		)
 	}
+
 	defer tx.Rollback()
 
 	// Mencari peminjaman aktif
@@ -159,8 +169,15 @@ func (s *LoanService) ReturnBook(ctx context.Context, memberID, bookID int) erro
 	}
 	if loan == nil {
 		return model.NewAPIError(
-			"Anda tidak sedang meminjam buku ini",
+			"Anda tidak sedang meminjam buku ini atau buku tidak ditemukan",
 			model.ErrCodeNotFound,
+		)
+	}
+
+	if loan.ReturnedAt != nil {
+		return model.NewAPIError(
+			"Buku sudah dikembalikan",
+			model.ErrCodeAlreadyReturned,
 		)
 	}
 
