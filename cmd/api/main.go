@@ -40,14 +40,14 @@ func main() {
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+	// API routes prefix
+	api := router.PathPrefix("/api/v1").Subrouter()
+
+	api.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status": "ok", "service": "library-api"}`))
 	}).Methods("GET")
-
-	// API routes prefix
-	api := router.PathPrefix("/api/v1").Subrouter()
 
 	// Loan endpoints
 	api.HandleFunc("/borrow", loanHandler.BorrowBook).Methods("POST")
