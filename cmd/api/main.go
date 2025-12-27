@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Ar1veeee/library-api/internal/config"
-	"github.com/Ar1veeee/library-api/internal/handler"
+	handler2 "github.com/Ar1veeee/library-api/internal/http/handler"
 	"github.com/Ar1veeee/library-api/internal/repository"
 	"github.com/Ar1veeee/library-api/internal/service"
 	"github.com/gorilla/mux"
@@ -34,9 +34,9 @@ func main() {
 	memberService := service.NewMemberService(memberRepo, loanRepo)
 	loanService := service.NewLoanService(db, bookRepo, memberRepo, loanRepo)
 
-	bookHandler := handler.NewBookHandler(bookService)
-	memberHandler := handler.NewMemberHandler(memberService)
-	loanHandler := handler.NewLoanHandler(loanService)
+	bookHandler := handler2.NewBookHandler(bookService)
+	memberHandler := handler2.NewMemberHandler(memberService)
+	loanHandler := handler2.NewLoanHandler(loanService)
 
 	router := mux.NewRouter()
 

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Ar1veeee/library-api/internal/dto"
+	"github.com/Ar1veeee/library-api/internal/http/mapper"
 	"github.com/Ar1veeee/library-api/internal/service"
 	"github.com/gorilla/mux"
 )
@@ -21,13 +22,13 @@ func (h *MemberHandler) GetMemberLoans(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	memberID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		HandleHTTPError(w, err)
+		mapper.HandleHTTPError(w, err)
 		return
 	}
 
 	loans, err := h.memberService.GetMemberLoans(r.Context(), memberID)
 	if err != nil {
-		HandleHTTPError(w, err)
+		mapper.HandleHTTPError(w, err)
 		return
 	}
 
@@ -36,5 +37,5 @@ func (h *MemberHandler) GetMemberLoans(w http.ResponseWriter, r *http.Request) {
 		Data:    loans,
 	}
 
-	respondSuccess(w, response, http.StatusOK)
+	mapper.RespondSuccess(w, response, http.StatusOK)
 }

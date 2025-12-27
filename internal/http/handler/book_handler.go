@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/Ar1veeee/library-api/internal/dto"
+	"github.com/Ar1veeee/library-api/internal/http/mapper"
 	"github.com/Ar1veeee/library-api/internal/service"
 	"github.com/gorilla/mux"
 )
@@ -20,7 +21,7 @@ func NewBookHandler(bookService *service.BookService) *BookHandler {
 func (h *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
 	books, err := h.bookService.GetAllBooks(r.Context())
 	if err != nil {
-		HandleHTTPError(w, err)
+		mapper.HandleHTTPError(w, err)
 		return
 	}
 
@@ -44,20 +45,20 @@ func (h *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
 		Data:    booksData,
 	}
 
-	respondSuccess(w, response, http.StatusOK)
+	mapper.RespondSuccess(w, response, http.StatusOK)
 }
 
 func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	bookID, err := strconv.Atoi(vars["id"])
 	if err != nil {
-		HandleHTTPError(w, err)
+		mapper.HandleHTTPError(w, err)
 		return
 	}
 
 	book, err := h.bookService.GetBookByID(r.Context(), bookID)
 	if err != nil {
-		HandleHTTPError(w, err)
+		mapper.HandleHTTPError(w, err)
 		return
 	}
 
@@ -73,5 +74,5 @@ func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 		Data:    bookData,
 	}
 
-	respondSuccess(w, response, http.StatusOK)
+	mapper.RespondSuccess(w, response, http.StatusOK)
 }
