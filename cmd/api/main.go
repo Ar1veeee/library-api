@@ -24,7 +24,7 @@ func main() {
 	if err := db.Ping(); err != nil {
 		log.Fatalf("Failed to ping database %v:", err)
 	}
-	log.Println("Database is ready")
+	log.Println("✅ Database connected successfully")
 
 	bookRepo := repository.NewBookRepository(db)
 	memberRepo := repository.NewMemberRepository(db)
@@ -61,7 +61,7 @@ func main() {
 	api.HandleFunc("/members/{id}/loans", memberHandler.GetMemberLoans).Methods("GET")
 
 	addr := ":" + cfg.ServerPort
-	log.Printf("Server starting on %s", addr)
+	log.Printf("🚀 Server starting on %s", addr)
 	if err := http.ListenAndServe(addr, router); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
