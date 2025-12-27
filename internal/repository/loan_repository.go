@@ -92,7 +92,7 @@ func (r *LoanRepository) GetByMemberID(ctx context.Context, memberID int) ([]mod
 			SELECT l.id, l.member_id, l.book_id, l.borrowed_at, l.returned_at, b.title, b.author
 			FROM loans l
 			JOIN books b ON l.book_id = b.id
-			WHERE l.member_id = ? AND l.returned_at IS NULL
+			WHERE l.member_id = ?
 			ORDER BY l.borrowed_at DESC
 		`
 
