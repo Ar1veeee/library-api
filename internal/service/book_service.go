@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"github.com/Ar1veeee/library-api/internal/errors"
 	"github.com/Ar1veeee/library-api/internal/model"
 	"github.com/Ar1veeee/library-api/internal/repository"
 )
@@ -25,7 +26,7 @@ func (s *BookService) GetBookByID(ctx context.Context, bookID int) (*model.Book,
 		return nil, err
 	}
 	if book == nil {
-		return nil, model.NewAPIError("Buku tidak ditemukan", model.ErrCodeNotFound)
+		return nil, errors.NewAPIError("Buku tidak ditemukan", errors.ErrCodeNotFound)
 	}
 	return book, nil
 }

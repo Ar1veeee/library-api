@@ -4,24 +4,24 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Ar1veeee/library-api/internal/model"
+	errorStruct "github.com/Ar1veeee/library-api/internal/errors"
 )
 
-func httpStatusFromAPIError(err model.APIError) int {
+func httpStatusFromAPIError(err errorStruct.APIError) int {
 	switch err.ZiyadErrCode {
-	case model.ErrCodeNotFound:
+	case errorStruct.ErrCodeNotFound:
 		return http.StatusNotFound
 
-	case model.ErrCodeInvalidInput:
+	case errorStruct.ErrCodeInvalidInput:
 		return http.StatusBadRequest
 
-	case model.ErrCodeAlreadyBorrowed,
-		model.ErrCodeAlreadyReturned,
-		model.ErrCodeQuotaExceeded,
-		model.ErrCodeStockEmpty:
+	case errorStruct.ErrCodeAlreadyBorrowed,
+		errorStruct.ErrCodeAlreadyReturned,
+		errorStruct.ErrCodeQuotaExceeded,
+		errorStruct.ErrCodeStockEmpty:
 		return http.StatusConflict
 
-	case model.ErrCodeTxFailed:
+	case errorStruct.ErrCodeTxFailed:
 		return http.StatusInternalServerError
 
 	default:
@@ -33,7 +33,7 @@ func httpStatusFromAPIError(err model.APIError) int {
 // - Kita perlu tahu apakah error dari business logic (APIError)
 // - APIError = user-facing error dengan custom code
 func HandleHTTPError(w http.ResponseWriter, err error) {
-	var apiErr model.APIError
+	var apiErr errorStruct.APIError
 	if errors.As(err, &apiErr) {
 		respondError(w, apiErr, httpStatusFromAPIError(apiErr))
 		return
@@ -41,7 +41,7 @@ func HandleHTTPError(w http.ResponseWriter, err error) {
 
 	respondError(
 		w,
-		model.NewAPIError("Internal server error", model.ErrCodeTxFailed),
+		errorStruct.NewAPIError("Internal server error", errorStruct.ErrCodeTxFailed),
 		http.StatusInternalServerError,
 	)
 }

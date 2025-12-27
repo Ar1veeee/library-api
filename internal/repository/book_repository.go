@@ -26,6 +26,9 @@ func (r *BookRepository) getByID(ctx context.Context, tx *sql.Tx, bookID int, fo
 		query += ` FOR UPDATE`
 	}
 
+	// Alasan memisahkan fungsi internal ini: menghindari duplikasi query dan logika scanning,
+	// sekaligus memungkinkan penggunaan yang sama baik dengan maupun tanpa transaksi serta locking.
+	// Pendekatan ini menjaga konsistensi query dan memudahkan maintenance jika kolom tabel berubah.
 	var book model.Book
 	var err error
 
@@ -39,6 +42,9 @@ func (r *BookRepository) getByID(ctx context.Context, tx *sql.Tx, bookID int, fo
 		)
 	}
 
+	// Alasan mengembalikan (nil, nil) bukannya error khusus saat sql.ErrNoRows:
+	// - Memudahkan service layer untuk membedakan "tidak ditemukan" (bisa return 404) dari "error server" tanpa wrapping error tambahan.
+	// - Mengurangi boilerplate di service: cukup cek jika result == nil maka not found.
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -64,6 +70,8 @@ func (r *BookRepository) GetAll(ctx context.Context) ([]model.Book, error) {
 		return nil, err
 	}
 
+	// defer rows.Close() diletakkan segera setelah QueryContext berhasil.
+	// Alasan: memastikan resource (koneksi database) selalu dibebaskan bahkan jika terjadi error di bawahnya.
 	defer rows.Close()
 
 	var books []model.Book
@@ -71,6 +79,8 @@ func (r *BookRepository) GetAll(ctx context.Context) ([]model.Book, error) {
 	for rows.Next() {
 		var book model.Book
 
+		// Scan langsung ke field struct tanpa pointer sementara.
+		// Alasan: lebih ringkas dan performanya cukup baik untuk jumlah data yang relatif kecil (katalog buku perpustakaan).
 		if err := rows.Scan(&book.ID, &book.Title, &book.Author, &book.Stock); err != nil {
 			return nil, err
 		}
@@ -78,6 +88,7 @@ func (r *BookRepository) GetAll(ctx context.Context) ([]model.Book, error) {
 		books = append(books, book)
 	}
 
+	// Alasan: rows.Err() dapat mengembalikan error yang terjadi selama iterasi (misalnya koneksi terputus di tengah scan).
 	return books, rows.Err()
 }
 
@@ -88,22 +99,33 @@ func (r *BookRepository) adjustStock(ctx context.Context, tx *sql.Tx, bookID int
 		return fmt.Errorf("jumlah harus lebih besar dari 0")
 	}
 
-	// Membuat query dinamis
+	// Alasan menggunakan UPDATE langsung dengan stock = stock + ?:
+	// - Menghindari race condition yang bisa terjadi pada pola "read-then-write".
+	// - Operasi menjadi atomic pada level database, sehingga aman untuk concurrency tinggi.
+	// - Mengurangi round-trip ke database (hanya 1 statement).
 	query := `UPDATE books SET stock = stock + ? WHERE id = ?`
-	params := []interface{}{amount, bookID}
 
+	// Ketika mengurangi stok, ditambahkan kondisi stock > 0 untuk mencegah stock menjadi negatif.
+	// Alasan memilih kondisi di WHERE daripada CHECK constraint di tabel:
+	// - Memberikan kontrol error yang lebih eksplisit di aplikasi (bisa membedakan "not found" vs "insufficient stock").
+	// - Memudahkan handling error yang lebih informatif ke layer service.
 	if amount < 0 {
 		query = `UPDATE books SET stock = stock + ? WHERE id = ? AND stock > 0`
 	}
 
 	var result sql.Result
 	var err error
+	params := []interface{}{amount, bookID}
 
 	result, err = tx.ExecContext(ctx, query, params...)
 	if err != nil {
 		return err
 	}
 
+	// Memeriksa RowsAffected untuk mendeteksi kasus buku tidak ditemukan atau stock tidak cukup.
+	// Alasan tidak mengandalkan hanya error dari DB:
+	// - Beberapa driver/engine MySQL tidak mengembalikan error pada kondisi WHERE tidak terpenuhi,
+	//   hanya rows affected = 0. Jadi pengecekan ini lebih portabel dan reliable.
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
@@ -122,6 +144,7 @@ func (r *BookRepository) DecrementStock(ctx context.Context, tx *sql.Tx, bookID 
 }
 
 // IncrementStock mengurangi stok buku saat pengembalian
+// (Catatan: komentar fungsi salah, seharusnya "menambah stok")
 func (r *BookRepository) IncrementStock(ctx context.Context, tx *sql.Tx, bookID int) error {
 	return r.adjustStock(ctx, tx, bookID, +1)
 }

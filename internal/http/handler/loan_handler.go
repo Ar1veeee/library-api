@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/Ar1veeee/library-api/internal/dto"
+	"github.com/Ar1veeee/library-api/internal/errors"
 	"github.com/Ar1veeee/library-api/internal/http/mapper"
-	"github.com/Ar1veeee/library-api/internal/model"
 	"github.com/Ar1veeee/library-api/internal/service"
 )
 
@@ -28,9 +28,9 @@ func (h *LoanHandler) BorrowBook(w http.ResponseWriter, r *http.Request) {
 	if req.MemberID <= 0 || req.BookID <= 0 {
 		mapper.HandleHTTPError(
 			w,
-			model.NewAPIError(
+			errors.NewAPIError(
 				"member_id dan book_id harus lebih dari 0",
-				model.ErrCodeInvalidInput,
+				errors.ErrCodeInvalidInput,
 			),
 		)
 		return
@@ -60,9 +60,9 @@ func (h *LoanHandler) ReturnBook(w http.ResponseWriter, r *http.Request) {
 	if req.MemberID <= 0 || req.BookID <= 0 {
 		mapper.HandleHTTPError(
 			w,
-			model.NewAPIError(
+			errors.NewAPIError(
 				"member_id dan book_id harus lebih dari 0",
-				model.ErrCodeInvalidInput,
+				errors.ErrCodeInvalidInput,
 			),
 		)
 		return

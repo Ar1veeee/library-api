@@ -5,10 +5,10 @@ import (
 	"net/http"
 
 	"github.com/Ar1veeee/library-api/internal/dto"
-	"github.com/Ar1veeee/library-api/internal/model"
+	"github.com/Ar1veeee/library-api/internal/errors"
 )
 
-func respondError(w http.ResponseWriter, err model.APIError, statusCode int) {
+func respondError(w http.ResponseWriter, err errors.APIError, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Ar1veeee/library-api/internal/dto"
-	"github.com/Ar1veeee/library-api/internal/model"
+	"github.com/Ar1veeee/library-api/internal/errors"
 	"github.com/Ar1veeee/library-api/internal/repository"
 )
 
@@ -26,24 +26,32 @@ func (s *MemberService) GetMemberLoans(ctx context.Context, memberID int) (*dto.
 		return nil, err
 	}
 	if member == nil {
-		return nil, model.NewAPIError("Member tidak ditemukan", model.ErrCodeNotFound)
+		return nil, errors.NewAPIError("Member tidak ditemukan", errors.ErrCodeNotFound)
 	}
 
-	// Get loan history
 	loans, err := s.loanRepo.GetByMemberID(ctx, memberID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Convert to DTO
+	// Pre-allocate slice dengan panjang pasti untuk menghindari multiple reallocation saat append.
+	// Alasan: performa lebih baik dan lebih predictable memory usage.
 	loanItems := make([]dto.LoanHistoryItem, len(loans))
 	for i, loan := range loans {
+		// ReturnedAt di DTO bertipe *string agar bisa null ketika buku belum dikembalikan.
+		// Alasan menggunakan pointer daripada string kosong:
+		// - Representasi JSON yang benar: null vs "" memiliki makna berbeda di API response.
+		// - Client bisa membedakan "belum dikembalikan" (null) vs "dikembalikan tapi timestamp kosong".
 		var returnedAt *string
 		if loan.ReturnedAt != nil {
 			formatted := loan.ReturnedAt.Format("2006-01-02 15:04:05")
+			// Pass by reference: pointer ke string karena string immutable di Go dan nilai akan di-copy ke struct.
 			returnedAt = &formatted
 		}
 
+		// Status "loan" vs "returned" ditentukan di service layer, bukan di repository.
+		// Alasan: status adalah derived data untuk keperluan presentasi (DTO), bukan data domain murni.
+		// Menjaga repository tetap fokus pada persistence, sementara service menangani business/presentation logic.
 		status := "loan"
 		if loan.ReturnedAt != nil {
 			status = "returned"
@@ -60,6 +68,8 @@ func (s *MemberService) GetMemberLoans(ctx context.Context, memberID int) (*dto.
 		}
 	}
 
+	// TotalLoans dihitung dari len(loanItems) termasuk yang sudah returned.
+	// Alasan: memberikan informasi lengkap riwayat peminjaman (bukan hanya loan).
 	response := &dto.MemberLoansResponse{
 		MemberID:   member.ID,
 		MemberName: member.Name,
