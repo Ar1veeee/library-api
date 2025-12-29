@@ -25,24 +25,9 @@ func (h *BookHandler) GetBooks(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookResponses := make([]dto.BookResponse, len(books))
-	for i, book := range books {
-		bookResponses[i] = dto.BookResponse{
-			ID:     book.ID,
-			Title:  book.Title,
-			Author: book.Author,
-			Stock:  book.Stock,
-		}
-	}
-
-	booksData := dto.BooksListResponse{
-		Total: len(bookResponses),
-		Books: bookResponses,
-	}
-
 	response := dto.SuccessResponse{
 		Message: "Berhasil mengambil data buku",
-		Data:    booksData,
+		Data:    books,
 	}
 
 	mapper.RespondSuccess(w, response, http.StatusOK)
