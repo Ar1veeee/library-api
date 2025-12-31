@@ -209,13 +209,6 @@ func (s *LoanService) ReturnBook(ctx context.Context, memberID, bookID int) erro
 		)
 	}
 
-	if loan.ReturnedAt != nil {
-		return errorStruct.NewAPIError(
-			"Buku sudah dikembalikan",
-			errorStruct.ErrCodeAlreadyReturned,
-		)
-	}
-
 	// MarkAsReturned dan IncrementStock dilakukan dalam satu transaksi.
 	// Alasan: menjaga atomicity — stok hanya bertambah jika pengembalian berhasil tercatat.
 	if err := s.loanRepo.MarkAsReturned(ctx, tx, loan.ID); err != nil {
