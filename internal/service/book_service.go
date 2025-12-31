@@ -5,7 +5,6 @@ import (
 
 	"github.com/Ar1veeee/library-api/internal/dto"
 	"github.com/Ar1veeee/library-api/internal/errors"
-	"github.com/Ar1veeee/library-api/internal/model"
 	"github.com/Ar1veeee/library-api/internal/repository"
 )
 
@@ -39,7 +38,7 @@ func (s *BookService) GetAllBooks(ctx context.Context) (*dto.BooksListResponse, 
 	}, nil
 }
 
-func (s *BookService) GetBookByID(ctx context.Context, bookID int) (*model.Book, error) {
+func (s *BookService) GetBookByID(ctx context.Context, bookID int) (*dto.BookResponse, error) {
 	book, err := s.bookRepo.GetByID(ctx, bookID)
 	if err != nil {
 		return nil, err
@@ -47,5 +46,13 @@ func (s *BookService) GetBookByID(ctx context.Context, bookID int) (*model.Book,
 	if book == nil {
 		return nil, errors.NewAPIError("Buku tidak ditemukan", errors.ErrCodeNotFound)
 	}
-	return book, nil
+
+	bookData := &dto.BookResponse{
+		ID:     book.ID,
+		Title:  book.Title,
+		Author: book.Author,
+		Stock:  book.Stock,
+	}
+
+	return bookData, nil
 }

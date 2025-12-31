@@ -47,16 +47,9 @@ func (h *BookHandler) GetBookByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookData := dto.BookResponse{
-		ID:     book.ID,
-		Title:  book.Title,
-		Author: book.Author,
-		Stock:  book.Stock,
-	}
-
 	response := dto.SuccessResponse{
 		Message: "Berhasil mengambil data detail buku",
-		Data:    bookData,
+		Data:    book,
 	}
 
 	mapper.RespondSuccess(w, response, http.StatusOK)
