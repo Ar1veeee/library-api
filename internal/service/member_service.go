@@ -45,7 +45,6 @@ func (s *MemberService) GetMemberLoans(ctx context.Context, memberID int) (*dto.
 		var returnedAt *string
 		if loan.ReturnedAt != nil {
 			formatted := loan.ReturnedAt.Format("2006-01-02 15:04:05")
-			// Pass by reference: pointer ke string karena string immutable di Go dan nilai akan di-copy ke struct.
 			returnedAt = &formatted
 		}
 
